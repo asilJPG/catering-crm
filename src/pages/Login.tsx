@@ -10,7 +10,6 @@ import {Heading, Text} from '@astryxdesign/core/Text';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {SparklesIcon} from '@heroicons/react/24/outline';
 import {useAuth} from '../lib/auth';
-import {backend} from '../lib/backend';
 
 export default function Login() {
   const {signIn} = useAuth();
@@ -64,14 +63,6 @@ export default function Login() {
             isDisabled={!password}
             onClick={submit}
           />
-
-          {backend.mode === 'local' ? (
-            <Banner
-              status="info"
-              title="Демо-режим без базы данных"
-              description="Пароли: admin123 (администратор), director123 (директор), alisher123 и dilshod123 (менеджеры). Подключение Supabase описано в supabase/README.md."
-            />
-          ) : null}
         </VStack>
       </Card>
     </Center>

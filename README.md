@@ -28,6 +28,9 @@ npx convex run authNode:seedAdmin '{"name":"Администратор","passwor
 npx convex run data:loadDemoCatalog  # необязательно: каталог, комплекты и клиенты
 ```
 
+Боевая база: те же команды с флагом `--prod`, функции заливаются `npx convex deploy`.
+На Vercel адрес боевой базы задан переменной `VITE_CONVEX_URL` (production). После смены переменной нужна пересборка.
+
 Ключ деплоя и пароли в репозиторий не кладутся. Адрес базы (`VITE_CONVEX_URL`) лежит в `.env.local`.
 
 ## Роли

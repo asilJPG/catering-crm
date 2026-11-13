@@ -238,10 +238,13 @@ export const remove = mutation({
 
 // ── Демо-данные: запускаются вручную, ничего не перезаписывают ──
 
-/** npx convex run data:loadDemoCatalog — каталог, комплекты и клиенты из демо-набора, если таблицы пусты. */
+/**
+ * npx convex run data:loadDemoCatalog — каталог, комплекты и клиенты из демо-набора, если таблицы пусты.
+ * Для боевой базы: '{"withClients":false}' — вымышленных клиентов не загружаем.
+ */
 export const loadDemoCatalog = internalMutation({
-  args: {},
-  handler: async ctx => {
+  args: {withClients: v.optional(v.boolean())},
+  handler: async (ctx, {withClients}) => {
     const seed = createSeed();
     const counts = {catalog: 0, kits: 0, clients: 0};
     if ((await ctx.db.query('catalog').first()) === null) {
@@ -256,7 +259,7 @@ export const loadDemoCatalog = internalMutation({
         counts.kits += 1;
       }
     }
-    if ((await ctx.db.query('clients').first()) === null) {
+    if (withClients !== false && (await ctx.db.query('clients').first()) === null) {
       for (const client of seed.clients) {
         await ctx.db.insert('clients', client);
         counts.clients += 1;

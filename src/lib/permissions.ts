@@ -7,7 +7,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 };
 
 /** Роли, которые админ может выдавать при создании пользователя. */
-export const ASSIGNABLE_ROLES: Role[] = ['manager', 'director'];
+export const ASSIGNABLE_ROLES: Role[] = ['manager', 'director', 'admin'];
 
 /** Что разрешено роли. Сервер (RLS в Supabase) проверяет то же самое независимо от интерфейса. */
 export function permissionsFor(role: Role) {

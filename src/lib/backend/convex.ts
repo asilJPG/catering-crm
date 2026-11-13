@@ -135,7 +135,6 @@ export function createConvexBackend(url: string): Backend {
     },
 
     async createUser(input: NewUserInput) {
-      if (input.role === 'admin') throw new Error('Администратора здесь создать нельзя');
       await run(
         client.action(api.authNode.createUser, {
           token: token(),
@@ -152,7 +151,7 @@ export function createConvexBackend(url: string): Backend {
           token: token(),
           id,
           name: patch.name,
-          role: patch.role === 'admin' ? undefined : patch.role,
+          role: patch.role,
           active: patch.active,
           password: patch.password,
         }),

@@ -98,7 +98,7 @@ const PASSWORD_TAKEN = 'Такой пароль уже используется.
 export const adminCreate = internalMutation({
   args: {
     name: v.string(),
-    role: v.union(assignableRole, v.literal('admin')),
+    role: assignableRole,
     passHash: v.string(),
   },
   handler: async (ctx, {name, role, passHash}) => {
@@ -127,9 +127,6 @@ export const adminUpdate = internalMutation({
     if (!target || !user) return {ok: false as const, message: 'Сотрудник не найден'};
     if (id === adminId) {
       return {ok: false as const, message: 'Свою учётную запись менять здесь нельзя'};
-    }
-    if (user.role === 'admin') {
-      return {ok: false as const, message: 'Администраторов здесь менять нельзя'};
     }
     if (passHash) {
       const owner = await ctx.db
@@ -168,7 +165,6 @@ export const deleteUser = mutation({
     const user = target ? await ctx.db.get(target) : null;
     if (!target || !user) throw new ConvexError('Сотрудник не найден');
     if (target === admin._id) throw new ConvexError('Свою учётную запись удалить нельзя');
-    if (user.role === 'admin') throw new ConvexError('Администраторов здесь удалять нельзя');
     const sessions = await ctx.db
       .query('sessions')
       .withIndex('by_user', q => q.eq('userId', target))

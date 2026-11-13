@@ -35,8 +35,8 @@ export const orderStatus = v.union(
 );
 
 export const role = v.union(v.literal('admin'), v.literal('director'), v.literal('manager'));
-/** Роли, которые администратор может выдавать. */
-export const assignableRole = v.union(v.literal('director'), v.literal('manager'));
+/** Роли, которые администратор может выдавать (в том числе роль администратора). */
+export const assignableRole = role;
 
 const qtyLine = v.object({itemId: v.string(), qty: v.number()});
 

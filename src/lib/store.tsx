@@ -26,6 +26,7 @@ import type {
   Reservation,
   ReturnAct,
 } from './types';
+import type {Snapshot} from './backend';
 
 const COLLECTIONS: Collection[] = ['catalog', 'kits', 'clients', 'events', 'orders'];
 
@@ -91,6 +92,7 @@ export function StoreProvider({children}: {children: ReactNode}) {
   const synced = useRef<Database | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const pending = useRef(0);
+  const refreshRef = useRef<(() => Promise<void>) | null>(null);
 
   const enqueue = useCallback((task: () => Promise<void>) => {
     pending.current += 1;
@@ -99,28 +101,37 @@ export function StoreProvider({children}: {children: ReactNode}) {
       .catch(error => setSyncError(errorText(error)))
       .finally(() => {
         pending.current -= 1;
+        // Когда все записи ушли (или какая-то не прошла), сверяемся с сервером: он — источник правды.
+        if (pending.current === 0) refreshRef.current?.().catch(() => {});
       });
   }, []);
 
-  const refreshReservations = useCallback(() => {
-    backend.loadReservations().then(setExtraReservations).catch(() => {});
+  const applySnapshot = useCallback((snapshot: Snapshot) => {
+    synced.current = snapshot.db;
+    setDb(snapshot.db);
+    setExtraReservations(snapshot.reservations);
+    setPeople(snapshot.people);
   }, []);
 
   const refreshAll = useCallback(async () => {
-    const [data, reservations, list] = await Promise.all([
-      backend.loadData(user),
-      backend.loadReservations(),
-      backend.listPeople(),
-    ]);
-    synced.current = data;
-    setDb(data);
-    setExtraReservations(reservations);
-    setPeople(list);
-  }, [user]);
+    applySnapshot(await backend.loadSnapshot(user));
+  }, [user, applySnapshot]);
 
   useEffect(() => {
+    refreshRef.current = refreshAll;
     refreshAll().catch(error => setSyncError(errorText(error)));
   }, [refreshAll]);
+
+  // Живые обновления (Convex): изменения коллег приходят сами. Пока наши правки не сохранены, их не применяем,
+  // чтобы не затереть: после записи данные всё равно перечитываются.
+  useEffect(() => {
+    if (!db || !backend.subscribe) return;
+    return backend.subscribe(snapshot => {
+      if (pending.current === 0) applySnapshot(snapshot);
+    });
+    // Подписываемся один раз после первой загрузки, а не при каждом изменении данных.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [db === null, applySnapshot]);
 
   // Когда вкладку открывают снова, подтягиваем изменения коллег, если своё уже сохранено.
   useEffect(() => {
@@ -148,9 +159,8 @@ export function StoreProvider({children}: {children: ReactNode}) {
         if (op.kind === 'upsert') await backend.upsert(op.collection, op.row);
         else await backend.remove(op.collection, op.id);
       }
-      refreshReservations();
     });
-  }, [db, user.role, enqueue, refreshReservations]);
+  }, [db, user.role, enqueue]);
 
   const update = useCallback(
     (change: (prev: Database) => Database) =>
@@ -237,39 +247,15 @@ export function StoreProvider({children}: {children: ReactNode}) {
     [update],
   );
 
-  /** Акт возврата закрывает мероприятие и списывает недостающее со склада. Повторно не применяется. */
+  /**
+   * Акт возврата: сервер в одной операции закрывает мероприятие и списывает недостающее со склада
+   * (менеджер правит каталог только так). Результат подтягивается из хранилища, локально не угадываем.
+   */
   const saveReturnAct = useCallback(
     (eventId: string, act: ReturnAct) => {
-      const losses: Record<string, number> = {};
-      for (const line of act.lines) {
-        const lost = Math.max(line.issued - line.returned, 0);
-        if (lost > 0) losses[line.itemId] = lost;
-      }
-      let applied = false;
-      update(prev => {
-        const target = prev.events.find(event => event.id === eventId);
-        if (!target || target.returnAct) return prev;
-        applied = true;
-        return {
-          ...prev,
-          catalog: prev.catalog.map(item =>
-            losses[item.id] && item.stock !== null
-              ? {...item, stock: Math.max(item.stock - losses[item.id], 0)}
-              : item,
-          ),
-          events: prev.events.map(event =>
-            event.id === eventId ? {...event, status: 'done', returnAct: act} : event,
-          ),
-        };
-      });
-      // Менеджер не пишет в каталог напрямую — остаток меняет серверная функция.
-      queueMicrotask(() => {
-        if (applied && user.role === 'manager' && Object.keys(losses).length > 0) {
-          enqueue(() => backend.applyLosses(eventId, losses));
-        }
-      });
+      enqueue(() => backend.applyReturnAct(eventId, act));
     },
-    [update, enqueue, user.role],
+    [enqueue],
   );
 
   const saveOrder = useCallback(

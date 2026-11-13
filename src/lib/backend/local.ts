@@ -1,5 +1,5 @@
 import {createSeed} from '../seed';
-import type {AppUser, Database, Reservation, Role} from '../types';
+import type {AppUser, Database, ReturnAct, Role} from '../types';
 import {
   PASSWORD_TAKEN,
   type Backend,
@@ -106,15 +106,11 @@ export const localBackend: Backend = {
     localStorage.removeItem(SESSION_KEY);
   },
 
-  async loadData() {
+  async loadSnapshot() {
     const db = loadDb();
     write(DB_KEY, db);
-    return db;
-  },
-
-  async loadReservations(): Promise<Reservation[]> {
-    // В локальном режиме приложение видит все мероприятия, отдельная выборка не нужна.
-    return [];
+    // В локальном режиме приложение видит все мероприятия, отдельная выборка занятости не нужна.
+    return {db, reservations: [], people: (await loadUsers()).map(publicUser)};
   },
 
   async upsert(collection: Collection, row) {
@@ -134,12 +130,21 @@ export const localBackend: Backend = {
     write(DB_KEY, db);
   },
 
-  async applyLosses(_eventId, losses) {
+  async applyReturnAct(eventId: string, act: ReturnAct) {
     const db = loadDb();
-    db.catalog = db.catalog.map(item =>
-      losses[item.id] && item.stock !== null
-        ? {...item, stock: Math.max(item.stock - losses[item.id], 0)}
-        : item,
+    const event = db.events.find(entry => entry.id === eventId);
+    if (!event || event.returnAct) return;
+    for (const line of act.lines) {
+      const lost = Math.max(line.issued - line.returned, 0);
+      if (lost <= 0) continue;
+      db.catalog = db.catalog.map(item =>
+        item.id === line.itemId && item.stock !== null
+          ? {...item, stock: Math.max(item.stock - lost, 0)}
+          : item,
+      );
+    }
+    db.events = db.events.map(entry =>
+      entry.id === eventId ? {...entry, status: 'done', returnAct: act} : entry,
     );
     write(DB_KEY, db);
   },

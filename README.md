@@ -3,7 +3,7 @@
 Внутренняя CRM для кейтеринга: заявки, мероприятия с выбором блюд, мебели и персонала, каталог со складом,
 комплекты мебели, календарь занятости, акты возврата, смета в PDF, роли и вход по паролю.
 
-Стек: React 19, TypeScript, Vite, дизайн-система [Astryx](https://github.com/meta/astryx), Supabase (опционально).
+Стек: React 19, TypeScript, Vite, дизайн-система [Astryx](https://github.com/meta/astryx), Convex.
 
 ## Запуск
 
@@ -12,14 +12,23 @@ npm install
 npm run dev
 ```
 
-Без настройки работает демо-режим: данные и пользователи хранятся в браузере.
+Без `.env.local` работает демо-режим: данные и пользователи хранятся в браузере.
 Пароли для входа в демо: `admin123` (администратор), `director123` (директор),
 `alisher123` и `dilshod123` (менеджеры).
 
-## База данных
+## База данных (Convex)
 
-Подключение Supabase, права доступа и функции описаны в [supabase/README.md](supabase/README.md).
-Ключи кладутся в `.env` (пример — `.env.example`), сам `.env` в репозиторий не попадает.
+Серверная часть — в папке [convex/](convex). Подробно — в [ARCHITECTURE.md](ARCHITECTURE.md).
+
+```bash
+npm install
+npx convex dev                       # привязка к проекту Convex, создаёт .env.local
+npx convex env set PASSWORD_PEPPER <длинная случайная строка>
+npx convex run authNode:seedAdmin '{"name":"Администратор","password":"<пароль не короче 8 символов>"}'
+npx convex run data:loadDemoCatalog  # необязательно: каталог, комплекты и клиенты
+```
+
+Ключ деплоя и пароли в репозиторий не кладутся. Адрес базы (`VITE_CONVEX_URL`) лежит в `.env.local`.
 
 ## Роли
 

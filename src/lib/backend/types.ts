@@ -1,4 +1,4 @@
-import type {AppUser, Database, Reservation, Role} from '../types';
+import type {AppUser, Database, Reservation, ReturnAct, Role} from '../types';
 
 export type Collection = 'catalog' | 'kits' | 'clients' | 'events' | 'orders';
 
@@ -16,21 +16,29 @@ export type UserPatch = {
   password?: string;
 };
 
+/** Всё, что интерфейс получает от хранилища за один раз. */
+export type Snapshot = {
+  db: Database;
+  /** Занятость склада всеми подтверждёнными мероприятиями, включая те, которых пользователь не видит. */
+  reservations: Reservation[];
+  people: AppUser[];
+};
+
 /** Всё, что приложению нужно от хранилища: вход, данные и управление пользователями. */
 export interface Backend {
-  mode: 'local' | 'supabase';
+  mode: 'local' | 'convex';
   getSession(): Promise<AppUser | null>;
   /** Вход по одному паролю: у каждого сотрудника он свой и не повторяется. */
   signIn(password: string): Promise<AppUser>;
   signOut(): Promise<void>;
 
-  loadData(user: AppUser): Promise<Database>;
-  /** Занятость склада мероприятиями, которые пользователь не видит (для менеджера). */
-  loadReservations(): Promise<Reservation[]>;
+  loadSnapshot(user: AppUser): Promise<Snapshot>;
+  /** Живая подписка: вызывается при каждом изменении данных (только Convex). Возвращает отписку. */
+  subscribe?(onChange: (snapshot: Snapshot) => void): () => void;
   upsert(collection: Collection, row: {id: string}): Promise<void>;
   remove(collection: Collection, id: string): Promise<void>;
-  /** Списание недостающего по акту возврата. Менеджер не может править каталог напрямую. */
-  applyLosses(eventId: string, losses: Record<string, number>): Promise<void>;
+  /** Акт возврата: закрывает мероприятие и списывает недостающее со склада одной операцией. */
+  applyReturnAct(eventId: string, act: ReturnAct): Promise<void>;
 
   listPeople(): Promise<AppUser[]>;
   createUser(input: NewUserInput): Promise<void>;

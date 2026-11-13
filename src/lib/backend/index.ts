@@ -1,11 +1,13 @@
+import {createConvexBackend} from './convex';
 import {localBackend} from './local';
-import {createSupabaseBackend} from './supabase';
 import type {Backend} from './types';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const convexUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;
 
-/** Supabase включается, когда в .env заданы адрес проекта и публичный ключ; иначе — локальный режим. */
-export const backend: Backend = url && anonKey ? createSupabaseBackend(url, anonKey) : localBackend;
+/**
+ * Convex включается, когда в .env.local задан VITE_CONVEX_URL (его создаёт `npx convex dev`);
+ * иначе приложение работает в демо-режиме с данными в браузере.
+ */
+export const backend: Backend = convexUrl ? createConvexBackend(convexUrl) : localBackend;
 
 export * from './types';

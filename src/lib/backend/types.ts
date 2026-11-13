@@ -46,7 +46,7 @@ export interface Backend {
   deleteUser(id: string): Promise<void>;
 }
 
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 6;
 
 /** Пароль — единственный ключ для входа, поэтому он длиннее обычного. */
 export function validatePassword(password: string): string | null {

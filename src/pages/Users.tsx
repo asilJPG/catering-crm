@@ -228,7 +228,7 @@ export default function Users() {
             <HStack gap={2} vAlign="end">
               <TextInput
                 label={isNew ? 'Пароль' : 'Новый пароль'}
-                description="Не короче 8 символов, у каждого сотрудника свой"
+                description="Не короче 6 символов, у каждого сотрудника свой"
                 width="100%"
                 isRequired={isNew}
                 autoComplete="new-password"

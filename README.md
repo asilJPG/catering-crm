@@ -24,7 +24,7 @@ npm run dev
 npm install
 npx convex dev                       # привязка к проекту Convex, создаёт .env.local
 npx convex env set PASSWORD_PEPPER <длинная случайная строка>
-npx convex run authNode:seedAdmin '{"name":"Администратор","password":"<пароль не короче 8 символов>"}'
+npx convex run authNode:seedAdmin '{"name":"Администратор","password":"<пароль не короче 6 символов>"}'
 npx convex run data:loadDemoCatalog  # необязательно: каталог, комплекты и клиенты
 ```
 

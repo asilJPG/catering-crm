@@ -7,7 +7,7 @@ export const SESSION_MS = 30 * 24 * 3600 * 1000;
 export const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 export const MAX_FAILURES_PER_DEVICE = 8;
 export const MAX_FAILURES_TOTAL = 40;
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 6;
 
 export const toAppUser = (user: Doc<'users'>): AppUser => ({
   id: String(user._id),

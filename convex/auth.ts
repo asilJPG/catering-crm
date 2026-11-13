@@ -177,3 +177,28 @@ export const deleteUser = mutation({
     await ctx.db.delete(target);
   },
 });
+
+/**
+ * Служебное удаление пользователя из терминала: npx convex run auth:removeUser '{"id":"..."}'.
+ * Нужно, например, чтобы заменить администратора: в интерфейсе админов удалять нельзя.
+ * Последнего администратора удалить нельзя, чтобы не остаться без входа.
+ */
+export const removeUser = internalMutation({
+  args: {id: v.string()},
+  handler: async (ctx, {id}) => {
+    const target = ctx.db.normalizeId('users', id);
+    const user = target ? await ctx.db.get(target) : null;
+    if (!target || !user) throw new ConvexError('Пользователь не найден');
+    if (user.role === 'admin') {
+      const admins = (await ctx.db.query('users').collect()).filter(u => u.role === 'admin');
+      if (admins.length < 2) throw new ConvexError('Нельзя удалить последнего администратора');
+    }
+    const sessions = await ctx.db
+      .query('sessions')
+      .withIndex('by_user', q => q.eq('userId', target))
+      .collect();
+    for (const session of sessions) await ctx.db.delete(session._id);
+    await ctx.db.delete(target);
+    return {removed: user.name};
+  },
+});

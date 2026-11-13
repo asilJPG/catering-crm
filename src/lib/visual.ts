@@ -3,18 +3,17 @@ import type {CatalogItem} from './types';
 type Tone = 'green' | 'orange' | 'red' | 'pink' | 'blue' | 'yellow' | 'purple' | 'teal' | 'gray';
 
 const BY_CATEGORY: Record<string, {emoji: string; tone: Tone}> = {
-  'Холодные закуски': {emoji: '🥗', tone: 'green'},
-  Салаты: {emoji: '🥬', tone: 'green'},
   Горячее: {emoji: '🍖', tone: 'orange'},
+  'Ассорти и плато': {emoji: '🥩', tone: 'red'},
+  'Канапе и брускетты': {emoji: '🥖', tone: 'yellow'},
+  Салаты: {emoji: '🥗', tone: 'green'},
+  'Фрукты и ягоды': {emoji: '🍓', tone: 'red'},
+  'Орехи и сладости': {emoji: '🥜', tone: 'orange'},
   Десерты: {emoji: '🍰', tone: 'pink'},
   Напитки: {emoji: '🥂', tone: 'blue'},
-  Столы: {emoji: '🍽️', tone: 'yellow'},
-  Стулья: {emoji: '🪑', tone: 'orange'},
-  'Мягкая мебель': {emoji: '🛋️', tone: 'purple'},
-  'Шатры и зоны': {emoji: '⛺', tone: 'teal'},
-  Посуда: {emoji: '🍴', tone: 'blue'},
-  Текстиль: {emoji: '🧺', tone: 'pink'},
-  Оборудование: {emoji: '☕', tone: 'gray'},
+  'Посуда и оборудование': {emoji: '🍴', tone: 'blue'},
+  'Мебель и текстиль': {emoji: '🪑', tone: 'orange'},
+  Персонал: {emoji: '🧑‍🍳', tone: 'gray'},
 };
 
 const BY_KIND: Record<CatalogItem['kind'], {emoji: string; tone: Tone}> = {

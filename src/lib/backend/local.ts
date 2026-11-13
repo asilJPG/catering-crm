@@ -12,7 +12,7 @@ import {
  * Локальный режим для разработки и демо: данные и пользователи лежат в браузере.
  * Пароли хешируются, но защиты от взлома тут нет — для работы нужен режим Supabase.
  */
-const DB_KEY = 'luma-catering-crm-v5';
+const DB_KEY = 'luma-catering-crm-v6';
 const USERS_KEY = 'luma-users-v1';
 const SESSION_KEY = 'luma-session-v1';
 
